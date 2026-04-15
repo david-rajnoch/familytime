@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FamilyTime — Mockup</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0f0f11;
+    --surface: #1a1a1f;
+    --surface2: #242429;
+    --border: #2e2e36;
+    --accent: #7c6af7;
+    --accent2: #5b4fd4;
+    --text: #e8e8f0;
+    --text2: #888898;
+    --green: #34d399;
+    --red: #f87171;
+  }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
+
+  /* NAV */
+  nav { display: flex; align-items: center; gap: 12px; padding: 0 24px; height: 56px; background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+  .nav-logo { font-weight: 700; font-size: 18px; letter-spacing: -0.5px; color: var(--text); }
+  .nav-logo span { color: var(--accent); }
+  .nav-tabs { display: flex; gap: 4px; margin-left: 32px; }
+  .nav-tab { padding: 6px 14px; border-radius: 8px; font-size: 14px; color: var(--text2); cursor: pointer; border: none; background: none; transition: all .15s; }
+  .nav-tab.active { background: var(--surface2); color: var(--text); }
+  .nav-tab:hover:not(.active) { color: var(--text); }
+  .spacer { flex: 1; }
+  .index-btn { display: flex; align-items: center; gap: 8px; padding: 7px 16px; background: var(--accent); color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; }
+  .index-btn:hover { background: var(--accent2); }
+
+  /* PAGES */
+  .page { display: none; flex: 1; }
+  .page.active { display: flex; flex-direction: column; }
+
+  /* ── PEOPLE GRID PAGE ── */
+  .page-header { padding: 28px 28px 0; }
+  .page-title { font-size: 26px; font-weight: 700; letter-spacing: -0.5px; }
+  .page-sub { color: var(--text2); font-size: 14px; margin-top: 4px; }
+  .search-row { display: flex; gap: 12px; margin-top: 20px; }
+  .search-input { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 9px 14px; color: var(--text); font-size: 14px; }
+  .search-input::placeholder { color: var(--text2); }
+  .filter-chip { padding: 8px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; font-size: 13px; color: var(--text2); cursor: pointer; }
+  .filter-chip.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  .people-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 18px; padding: 24px 28px; }
+  .person-card { background: var(--surface); border-radius: 14px; overflow: hidden; cursor: pointer; border: 2px solid transparent; transition: border .15s, transform .15s; }
+  .person-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .person-card.selected { border-color: var(--accent); }
+  .face-avatar { width: 100%; aspect-ratio: 1; object-fit: cover; background: var(--surface2); display: flex; align-items: center; justify-content: center; font-size: 52px; }
+  .face-avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .person-info { padding: 10px 12px 12px; }
+  .person-name { font-size: 15px; font-weight: 600; }
+  .person-count { font-size: 12px; color: var(--text2); margin-top: 2px; }
+  .unnamed-badge { display: inline-block; font-size: 11px; background: var(--surface2); color: var(--text2); border-radius: 4px; padding: 2px 6px; margin-top: 4px; }
+
+  /* ── PERSON DETAIL PAGE ── */
+  .detail-layout { display: flex; flex: 1; overflow: hidden; }
+  .detail-sidebar { width: 280px; flex-shrink: 0; background: var(--surface); border-right: 1px solid var(--border); padding: 24px; display: flex; flex-direction: column; gap: 20px; overflow-y: auto; }
+  .back-btn { display: flex; align-items: center; gap: 6px; font-size: 14px; color: var(--text2); cursor: pointer; border: none; background: none; padding: 0; }
+  .back-btn:hover { color: var(--text); }
+  .detail-face-big { width: 120px; height: 120px; border-radius: 50%; background: var(--surface2); display: flex; align-items: center; justify-content: center; font-size: 56px; margin: 0 auto; overflow: hidden; border: 3px solid var(--accent); }
+  .detail-face-big img { width: 100%; height: 100%; object-fit: cover; }
+  .name-input { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; color: var(--text); font-size: 16px; font-weight: 600; text-align: center; }
+  .name-input:focus { outline: none; border-color: var(--accent); }
+  .stat-row { display: flex; justify-content: space-between; font-size: 13px; }
+  .stat-label { color: var(--text2); }
+  .stat-val { font-weight: 600; }
+  .face-sample-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; border-radius: 8px; overflow: hidden; }
+  .face-sample { aspect-ratio: 1; background: var(--surface2); font-size: 22px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  .face-sample img { width: 100%; height: 100%; object-fit: cover; }
+  .merge-btn { width: 100%; padding: 9px; border-radius: 8px; background: var(--surface2); border: 1px solid var(--border); color: var(--text2); font-size: 13px; cursor: pointer; }
+  .merge-btn:hover { color: var(--text); border-color: var(--text2); }
+
+  .detail-main { flex: 1; overflow-y: auto; padding: 24px 28px; }
+  .timeline-section { margin-bottom: 32px; }
+  .timeline-month { font-size: 13px; font-weight: 600; color: var(--text2); letter-spacing: .05em; text-transform: uppercase; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .timeline-month::after { content:''; flex:1; height:1px; background: var(--border); }
+  .thumb-strip { display: flex; gap: 8px; flex-wrap: wrap; }
+  .thumb-item { position: relative; width: 140px; height: 105px; border-radius: 8px; overflow: hidden; cursor: pointer; background: var(--surface2); border: 2px solid transparent; transition: border .12s, transform .12s; flex-shrink: 0; }
+  .thumb-item:hover { border-color: var(--accent); transform: scale(1.02); }
+  .thumb-item img { width: 100%; height: 100%; object-fit: cover; }
+  .thumb-item .thumb-emoji { font-size: 32px; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
+  .video-badge { position: absolute; bottom: 6px; right: 6px; background: rgba(0,0,0,.7); border-radius: 5px; padding: 2px 6px; font-size: 11px; display: flex; align-items: center; gap: 4px; }
+  .video-badge svg { width: 10px; height: 10px; fill: #fff; }
+  .ts-badge { position: absolute; bottom: 6px; left: 6px; background: rgba(0,0,0,.7); border-radius: 5px; padding: 2px 6px; font-size: 11px; color: #fff; }
+
+  /* ── MEDIA VIEWER OVERLAY ── */
+  .viewer-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.92); z-index: 200; display: flex; align-items: center; justify-content: center; display: none; }
+  .viewer-overlay.open { display: flex; }
+  .viewer-inner { position: relative; width: 900px; max-width: 95vw; }
+  .viewer-close { position: absolute; top: -40px; right: 0; background: none; border: none; color: var(--text2); font-size: 24px; cursor: pointer; }
+  .viewer-close:hover { color: var(--text); }
+  .viewer-video-wrap { position: relative; border-radius: 12px; overflow: hidden; background: #000; aspect-ratio: 16/9; display: flex; align-items: center; justify-content: center; }
+  .viewer-video-placeholder { font-size: 80px; }
+  .bbox-overlay { position: absolute; border: 2px solid var(--accent); border-radius: 4px; box-shadow: 0 0 0 1px rgba(124,106,247,.3); }
+  .viewer-meta { margin-top: 14px; display: flex; align-items: center; gap: 12px; }
+  .viewer-filename { font-size: 14px; color: var(--text2); flex: 1; }
+  .viewer-ts { font-size: 14px; font-weight: 600; }
+  .viewer-controls { display: flex; gap: 8px; }
+  .ctrl-btn { padding: 7px 14px; border-radius: 7px; background: var(--surface); border: 1px solid var(--border); color: var(--text); font-size: 13px; cursor: pointer; }
+  .ctrl-btn:hover { border-color: var(--accent); }
+
+  /* ── INDEXING DRAWER ── */
+  .drawer-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 150; display: none; }
+  .drawer-overlay.open { display: block; }
+  .drawer { position: fixed; right: 0; top: 0; bottom: 0; width: 380px; background: var(--surface); border-left: 1px solid var(--border); z-index: 151; padding: 24px; display: none; flex-direction: column; gap: 20px; }
+  .drawer.open { display: flex; }
+  .drawer-title { font-size: 18px; font-weight: 700; }
+  .drawer-close { position: absolute; top: 20px; right: 20px; background: none; border: none; color: var(--text2); font-size: 20px; cursor: pointer; }
+  .path-input-row { display: flex; gap: 8px; }
+  .path-input { flex: 1; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; color: var(--text); font-size: 13px; }
+  .browse-btn { padding: 9px 14px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; font-size: 13px; color: var(--text2); cursor: pointer; white-space: nowrap; }
+  .start-btn { width: 100%; padding: 11px; background: var(--accent); border: none; border-radius: 10px; color: #fff; font-size: 15px; font-weight: 600; cursor: pointer; }
+  .start-btn:hover { background: var(--accent2); }
+  .job-card { background: var(--surface2); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 8px; }
+  .job-path { font-size: 13px; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .job-status { display: flex; justify-content: space-between; font-size: 13px; }
+  .status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--green); margin-right: 6px; animation: pulse 1.2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1}50%{opacity:.4} }
+  .progress-bar-wrap { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+  .progress-bar { height: 100%; background: linear-gradient(90deg, var(--accent), var(--green)); border-radius: 3px; transition: width 1s; }
+  .job-stats { display: flex; gap: 16px; font-size: 12px; color: var(--text2); }
+  .setting-row { display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
+  .setting-label { color: var(--text2); }
+  .setting-select { background: var(--surface2); border: 1px solid var(--border); border-radius: 7px; padding: 6px 10px; color: var(--text); font-size: 13px; }
+
+  /* UNKNOWN FACES PAGE */
+  .unknown-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; padding: 24px 28px; }
+  .unknown-face { position: relative; aspect-ratio: 1; border-radius: 10px; background: var(--surface); display: flex; align-items: center; justify-content: center; font-size: 36px; overflow: hidden; cursor: pointer; border: 2px solid transparent; }
+  .unknown-face:hover { border-color: var(--accent); }
+  .assign-btn { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(124,106,247,.85); color: #fff; font-size: 11px; text-align: center; padding: 4px; opacity: 0; transition: opacity .15s; }
+  .unknown-face:hover .assign-btn { opacity: 1; }
+
+  /* toasts */
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px 18px; font-size: 14px; display: flex; align-items: center; gap: 8px; z-index: 300; animation: fadeup .3s; }
+  @keyframes fadeup { from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)} }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">Family<span>Time</span></div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showPage('people')">People</button>
+    <button class="nav-tab" onclick="showPage('unknown')">Unknown Faces <span style="background:var(--surface2);border-radius:4px;padding:1px 6px;font-size:11px;margin-left:4px">247</span></button>
+  </div>
+  <div class="spacer"></div>
+  <button class="index-btn" onclick="openDrawer()">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+    Index Drive
+  </button>
+</nav>
+
+<!-- PEOPLE GRID PAGE -->
+<div class="page active" id="page-people">
+  <div class="page-header">
+    <div class="page-title">People</div>
+    <div class="page-sub">42 people identified · 183,412 photos · 1,847 videos indexed</div>
+    <div class="search-row">
+      <input class="search-input" placeholder="Search people…" />
+      <button class="filter-chip on">All</button>
+      <button class="filter-chip">Named</button>
+      <button class="filter-chip">Unnamed</button>
+    </div>
+  </div>
+  <div class="people-grid" id="people-grid"></div>
+</div>
+
+<!-- PERSON DETAIL PAGE -->
+<div class="page" id="page-detail">
+  <div class="detail-layout">
+    <div class="detail-sidebar">
+      <button class="back-btn" onclick="showPage('people')">← Back to People</button>
+      <div class="detail-face-big" id="detail-avatar"></div>
+      <input class="name-input" id="detail-name" value="" placeholder="Add name…" />
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div class="stat-row"><span class="stat-label">Photos</span><span class="stat-val" id="detail-photos">—</span></div>
+        <div class="stat-row"><span class="stat-label">Videos</span><span class="stat-val" id="detail-videos">—</span></div>
+        <div class="stat-row"><span class="stat-label">First seen</span><span class="stat-val" id="detail-first">—</span></div>
+        <div class="stat-row"><span class="stat-label">Last seen</span><span class="stat-val" id="detail-last">—</span></div>
+      </div>
+      <div>
+        <div style="font-size:12px;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em">Sample faces</div>
+        <div class="face-sample-grid" id="detail-samples"></div>
+      </div>
+      <button class="merge-btn">Merge with another person…</button>
+      <button class="merge-btn" style="color:var(--red);border-color:var(--red)">Remove false matches…</button>
+    </div>
+    <div class="detail-main" id="detail-timeline"></div>
+  </div>
+</div>
+
+<!-- UNKNOWN FACES PAGE -->
+<div class="page" id="page-unknown">
+  <div class="page-header">
+    <div class="page-title">Unknown Faces</div>
+    <div class="page-sub">247 faces not assigned to any person — click to assign or drag to a person</div>
+  </div>
+  <div class="unknown-grid" id="unknown-grid"></div>
+</div>
+
+<!-- INDEXING DRAWER -->
+<div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer">
+  <button class="drawer-close" onclick="closeDrawer()">✕</button>
+  <div class="drawer-title">Index a Drive</div>
+  <div class="path-input-row">
+    <input class="path-input" placeholder="/Volumes/FamilyDrive1" id="drive-path" />
+    <button class="browse-btn">Browse…</button>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:12px;">
+    <div class="setting-row">
+      <span class="setting-label">Video sampling</span>
+      <select class="setting-select"><option>Every 3 seconds (thorough)</option><option>Every 10 seconds</option><option>Every 30 seconds</option></select>
+    </div>
+    <div class="setting-row">
+      <span class="setting-label">Scene detection</span>
+      <select class="setting-select"><option>Enabled</option><option>Disabled</option></select>
+    </div>
+    <div class="setting-row">
+      <span class="setting-label">Face model</span>
+      <select class="setting-select"><option>buffalo_l (high accuracy)</option><option>buffalo_s (fast)</option></select>
+    </div>
+  </div>
+  <button class="start-btn">Start Indexing</button>
+  <div style="border-top:1px solid var(--border);padding-top:16px;">
+    <div style="font-size:12px;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:12px">Active Jobs</div>
+    <div class="job-card">
+      <div class="job-path">/Volumes/FamilyDrive2/Photos</div>
+      <div class="job-status">
+        <span><span class="status-dot"></span>Indexing videos…</span>
+        <span style="color:var(--text2);font-size:12px">ETA ~4h 20m</span>
+      </div>
+      <div class="progress-bar-wrap"><div class="progress-bar" style="width:34%"></div></div>
+      <div class="job-stats">
+        <span>12,841 / 37,200 files</span>
+        <span>48,332 faces found</span>
+        <span>4,218 videos</span>
+      </div>
+    </div>
+    <div class="job-card" style="margin-top:10px;opacity:.6">
+      <div class="job-path">/Volumes/FamilyDrive1</div>
+      <div class="job-status">
+        <span style="color:var(--green)">✓ Complete</span>
+        <span style="color:var(--text2);font-size:12px">2 days ago</span>
+      </div>
+      <div class="progress-bar-wrap"><div class="progress-bar" style="width:100%;background:var(--green)"></div></div>
+      <div class="job-stats"><span>102,471 files</span><span>391,022 faces</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- MEDIA VIEWER OVERLAY -->
+<div class="viewer-overlay" id="viewer">
+  <div class="viewer-inner">
+    <button class="viewer-close" onclick="closeViewer()">✕</button>
+    <div class="viewer-video-wrap" id="viewer-content">
+      <div class="viewer-video-placeholder">🎬</div>
+      <div class="bbox-overlay" style="left:28%;top:18%;width:20%;height:28%;"></div>
+    </div>
+    <div class="viewer-meta">
+      <div class="viewer-filename" id="viewer-filename">DSC_20190714_beach_vacation.mp4</div>
+      <div class="viewer-ts" id="viewer-ts">01:23:47</div>
+      <div class="viewer-controls">
+        <button class="ctrl-btn">← Prev</button>
+        <button class="ctrl-btn">Next →</button>
+        <button class="ctrl-btn">Open File</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const people = [
+  {id:0, name:'Emma', emoji:'👩', photos:4821, videos:312, first:'Jan 2010', last:'Dec 2024', color:'#f472b6'},
+  {id:1, name:'Lucas', emoji:'👦', photos:3290, videos:201, first:'Mar 2013', last:'Nov 2024', color:'#60a5fa'},
+  {id:2, name:'David', emoji:'👨', photos:2108, videos:98, first:'Jun 2005', last:'Dec 2024', color:'#34d399'},
+  {id:3, name:'Grandma Rose', emoji:'👵', photos:1450, videos:45, first:'Aug 2003', last:'Sep 2022', color:'#fbbf24'},
+  {id:4, name:'Tom', emoji:'🧒', photos:980, videos:67, first:'Jul 2015', last:'Oct 2024', color:'#a78bfa'},
+  {id:5, name:'', emoji:'🧑', photos:712, videos:22, first:'Jan 2018', last:'Feb 2020', color:'#94a3b8'},
+  {id:6, name:'Grandpa Joe', emoji:'👴', photos:601, videos:18, first:'May 2003', last:'Nov 2019', color:'#fb923c'},
+  {id:7, name:'', emoji:'👧', photos:450, videos:11, first:'Dec 2016', last:'Apr 2021', color:'#94a3b8'},
+  {id:8, name:'Sarah', emoji:'👩‍🦰', photos:389, videos:30, first:'Oct 2011', last:'Jun 2024', color:'#e879f9'},
+  {id:9, name:'', emoji:'🧔', photos:201, videos:8, first:'Mar 2019', last:'Aug 2022', color:'#94a3b8'},
+];
+
+const months = ['January 2024','December 2023','Summer 2023','Christmas 2022','Vacation 2022','Birthday 2021'];
+const thumbEmojis = ['🏖️','🎂','🏔️','🎄','🎉','🌊','🏠','🌸','🎅','🚗','⛷️','🌅'];
+const videoEmojis = ['🎬','📹','🎥'];
+
+function buildPeopleGrid() {
+  const grid = document.getElementById('people-grid');
+  grid.innerHTML = '';
+  people.forEach(p => {
+    const card = document.createElement('div');
+    card.className = 'person-card';
+    card.onclick = () => openDetail(p);
+    card.innerHTML = `
+      <div class="face-avatar" style="background:${p.color}22;font-size:56px;display:flex;align-items:center;justify-content:center">${p.emoji}</div>
+      <div class="person-info">
+        <div class="person-name">${p.name || 'Unknown person'}</div>
+        <div class="person-count">${p.photos.toLocaleString()} photos · ${p.videos} videos</div>
+        ${!p.name ? '<span class="unnamed-badge">Tap to name</span>' : ''}
+      </div>`;
+    grid.appendChild(card);
+  });
+}
+
+function openDetail(p) {
+  showPage('detail');
+  document.getElementById('detail-avatar').innerHTML = `<span style="font-size:56px">${p.emoji}</span>`;
+  document.getElementById('detail-name').value = p.name;
+  document.getElementById('detail-photos').textContent = p.photos.toLocaleString();
+  document.getElementById('detail-videos').textContent = p.videos;
+  document.getElementById('detail-first').textContent = p.first;
+  document.getElementById('detail-last').textContent = p.last;
+
+  const samples = document.getElementById('detail-samples');
+  samples.innerHTML = '';
+  for(let i=0;i<8;i++){
+    samples.innerHTML += `<div class="face-sample" style="background:#${Math.floor(Math.random()*0x444444+0x111111).toString(16).padStart(6,'0')}">${p.emoji}</div>`;
+  }
+
+  const timeline = document.getElementById('detail-timeline');
+  timeline.innerHTML = '';
+  months.forEach(month => {
+    const count = 4 + Math.floor(Math.random()*8);
+    let thumbs = '';
+    for(let i=0;i<count;i++){
+      const isVideo = Math.random() > 0.65;
+      const emoji = isVideo ? videoEmojis[Math.floor(Math.random()*videoEmojis.length)] : thumbEmojis[Math.floor(Math.random()*thumbEmojis.length)];
+      const ts = `0${Math.floor(Math.random()*2)}:${String(Math.floor(Math.random()*60)).padStart(2,'0')}:${String(Math.floor(Math.random()*60)).padStart(2,'0')}`;
+      thumbs += `<div class="thumb-item" onclick="openViewer(${isVideo})">
+        <div class="thumb-emoji">${emoji}</div>
+        ${isVideo ? `<div class="video-badge"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg> Video</div><div class="ts-badge">${ts}</div>` : ''}
+      </div>`;
+    }
+    timeline.innerHTML += `
+      <div class="timeline-section">
+        <div class="timeline-month">${month}</div>
+        <div class="thumb-strip">${thumbs}</div>
+      </div>`;
+  });
+}
+
+function openViewer(isVideo) {
+  const viewer = document.getElementById('viewer');
+  const content = document.getElementById('viewer-content');
+  viewer.classList.add('open');
+  if(isVideo) {
+    document.getElementById('viewer-filename').textContent = 'DSC_20190714_beach_vacation.mp4';
+    document.getElementById('viewer-ts').textContent = '01:23:47';
+    content.innerHTML = `<div style="font-size:100px;display:flex;align-items:center;justify-content:center;width:100%;height:100%;background:#000">🎬</div><div class="bbox-overlay" style="left:28%;top:18%;width:22%;height:32%;"></div>`;
+  } else {
+    document.getElementById('viewer-filename').textContent = 'IMG_2847.jpg';
+    document.getElementById('viewer-ts').textContent = 'Jul 14, 2019';
+    content.innerHTML = `<div style="font-size:100px;display:flex;align-items:center;justify-content:center;width:100%;height:100%;background:#111">🏖️</div><div class="bbox-overlay" style="left:35%;top:22%;width:18%;height:30%;"></div>`;
+  }
+}
+function closeViewer() { document.getElementById('viewer').classList.remove('open'); }
+
+function buildUnknownGrid() {
+  const grid = document.getElementById('unknown-grid');
+  const emojis = ['🧑','👦','👧','🧔','👩','🧒','👴','👵'];
+  for(let i=0;i<40;i++){
+    const el = document.createElement('div');
+    el.className = 'unknown-face';
+    const bg = `#${Math.floor(Math.random()*0x333333+0x111111).toString(16).padStart(6,'0')}`;
+    el.style.background = bg;
+    el.innerHTML = `${emojis[Math.floor(Math.random()*emojis.length)]}<div class="assign-btn">Assign to person</div>`;
+    grid.appendChild(el);
+  }
+}
+
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  const tabs = {people:0, unknown:1};
+  if(tabs[id]!==undefined) document.querySelectorAll('.nav-tab')[tabs[id]].classList.add('active');
+}
+
+function openDrawer() {
+  document.getElementById('drawer').classList.add('open');
+  document.getElementById('drawer-overlay').classList.add('open');
+}
+function closeDrawer() {
+  document.getElementById('drawer').classList.remove('open');
+  document.getElementById('drawer-overlay').classList.remove('open');
+}
+
+buildPeopleGrid();
+buildUnknownGrid();
+</script>
+</body>
+</html>
