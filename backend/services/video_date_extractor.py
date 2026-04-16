@@ -29,12 +29,12 @@ except ImportError:
 # Pattern list: most specific first.
 # Vision joins the two OSD lines with a space, giving e.g. "10:31 18.11.1995"
 _PATTERNS = [
-    # "10:31 18.11.1995" — time + 4-digit year date
-    (re.compile(r'\b(\d{1,2}):(\d{2})\s+(\d{1,2})\.(\d{1,2})\.(\d{4})\b'), 'hm_dmy4'),
-    # "10:31 18.11.95" — time + 2-digit year date
-    (re.compile(r'\b(\d{1,2}):(\d{2})\s+(\d{1,2})\.(\d{1,2})\.(\d{2})\b'), 'hm_dmy2'),
-    # Date-only fallback: "18.11.1995"
-    (re.compile(r'\b(\d{1,2})\.(\d{1,2})\.(\d{4})\b'), 'dmy4'),
+    # "10:31 18.11.1995" or "10:31 19. 2. 1995" or "16:01 19 2 1995" — dots/spaces optional
+    (re.compile(r'\b(\d{1,2}):(\d{2})\s+(\d{1,2})\.?\s*(\d{1,2})\.?\s*(\d{4})\b'), 'hm_dmy4'),
+    # Same but 2-digit year
+    (re.compile(r'\b(\d{1,2}):(\d{2})\s+(\d{1,2})\.?\s*(\d{1,2})\.?\s*(\d{2})\b'), 'hm_dmy2'),
+    # Date-only fallback with optional dots: "18.11.1995" or "19. 2. 1995" or "19 2 1995"
+    (re.compile(r'\b(\d{1,2})\.?\s*(\d{1,2})\.?\s*(\d{4})\b'), 'dmy4'),
 ]
 
 
@@ -103,7 +103,7 @@ def extract_date_from_video(path: str) -> Optional[str]:
         return None
 
     try:
-        timestamps = [0, 12_000, 24_000, 36_000, 48_000]
+        timestamps = [5_000, 20_000, 40_000, 60_000, 90_000, 120_000, 150_000]
         frames = extract_frames_batch(path, timestamps, interval_s=0)
     except Exception as e:
         logger.warning("Frame extraction failed for %s: %s", path, e)
@@ -112,7 +112,7 @@ def extract_date_from_video(path: str) -> Optional[str]:
     for ts_ms, img in frames:
         w, h = img.size
         # Crop: bottom 20% of height, left 35% of width — where the OSD sits
-        crop = img.crop((0, int(h * 0.80), int(w * 0.35), h))
+        crop = img.crop((0, int(h * 0.72), int(w * 0.65), h))
 
         # Preprocess: grayscale → contrast boost → 2× upscale for better OCR
         crop = ImageOps.grayscale(crop)
