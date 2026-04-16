@@ -4,7 +4,7 @@
  * - Video playback with seeking to exact timestamp
  * - Bounding box overlay for the face
  */
-import { useEffect, useRef, useCallback, useState } from 'react'
+import { useEffect, useRef, useCallback } from 'react'
 import type {} from '../api/persons'
 import { useUIStore } from '../store/ui'
 
@@ -17,41 +17,12 @@ function formatTimestamp(ms: number): string {
   return `${m}:${String(s).padStart(2, '0')}`
 }
 
-function BboxOverlay({ bx, by, bw, bh, opacity }: { bx: number; by: number; bw: number; bh: number; opacity: number }) {
-  return (
-    <div
-      style={{
-        position: 'absolute',
-        left: `${bx * 100}%`,
-        top: `${by * 100}%`,
-        width: `${bw * 100}%`,
-        height: `${bh * 100}%`,
-        border: '2px solid #7c6af7',
-        borderRadius: 4,
-        boxShadow: '0 0 0 1px rgba(124,106,247,0.3), inset 0 0 0 1px rgba(124,106,247,0.15)',
-        pointerEvents: 'none',
-        opacity,
-        transition: 'opacity 0.6s ease-out',
-      }}
-    />
-  )
-}
 
 export function MediaViewer() {
   const { open, appearance: a, playlist, playlistLabels, playlistIndex, closeViewer, navigateViewer } = useUIStore()
   const videoRef = useRef<HTMLVideoElement>(null)
-  const [bboxOpacity, setBboxOpacity] = useState(1)
-
   const hasPrev = playlistIndex > 0
   const hasNext = playlistIndex < playlist.length - 1
-
-  // Reset bbox opacity whenever a new appearance opens, then fade out after 2s
-  useEffect(() => {
-    if (!open || !a) return
-    setBboxOpacity(1)
-    const t = setTimeout(() => setBboxOpacity(0), 2000)
-    return () => clearTimeout(t)
-  }, [open, a?.face_id])
 
   // Seek video to the face timestamp when it loads
   const handleVideoLoaded = useCallback(() => {
@@ -183,8 +154,6 @@ export function MediaViewer() {
             />
           )}
 
-          {/* Bounding box overlay */}
-          <BboxOverlay bx={a.bbox_x} by={a.bbox_y} bw={a.bbox_w} bh={a.bbox_h} opacity={bboxOpacity} />
         </div>
 
         {/* Meta bar */}

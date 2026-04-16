@@ -102,4 +102,6 @@ def _guess_media_type(path: str) -> str:
         ".avi": "video/x-msvideo",
         ".mkv": "video/x-matroska",
         ".m4v": "video/mp4",
+        ".vob": "video/mpeg",
+        ".3gp": "video/3gpp",
     }.get(ext, "video/mp4")

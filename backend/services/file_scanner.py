@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Iterator
 
 PHOTO_EXTS = {".jpg", ".jpeg", ".png", ".heic", ".heif", ".tiff", ".tif", ".webp", ".bmp"}
-VIDEO_EXTS = {".mp4", ".mov", ".mts", ".m2ts", ".avi", ".mkv", ".m4v", ".3gp"}
+VIDEO_EXTS = {".mp4", ".mov", ".mts", ".m2ts", ".avi", ".mkv", ".m4v", ".3gp", ".vob", ".VOB"}
 
 
 def fast_hash(path: str) -> str:
