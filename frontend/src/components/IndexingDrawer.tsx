@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useJobs, useStartIndex, useTriggerClustering, useCancelJob, useFolders, useDeleteFolders, type IndexJob, type IndexedFolder } from '../api/indexing'
+import { useJobs, useStartIndex, useTriggerClustering, useCancelJob, useFolders, useDeleteFolders, useExtractDates, type IndexJob } from '../api/indexing'
 import { useUIStore } from '../store/ui'
 import { apiFetch } from '../api/client'
 
@@ -183,6 +183,7 @@ export function IndexingDrawer() {
   const { data: jobs } = useJobs()
   const startIndex = useStartIndex()
   const recluster = useTriggerClustering()
+  const extractDates = useExtractDates()
 
   const handleBrowse = async () => {
     setPicking(true)
@@ -336,6 +337,17 @@ export function IndexingDrawer() {
           }}
         >
           {recluster.isPending ? 'Clustering…' : 'Re-run Clustering'}
+        </button>
+
+        <button
+          onClick={() => extractDates.mutate()}
+          disabled={extractDates.isPending}
+          style={{
+            padding: 9, background: '#242429', border: '1px solid #2e2e36', borderRadius: 10,
+            color: '#888', fontSize: 13, cursor: 'pointer',
+          }}
+        >
+          {extractDates.isPending ? 'Starting…' : 'Extract Video Dates'}
         </button>
 
         {/* Jobs list */}

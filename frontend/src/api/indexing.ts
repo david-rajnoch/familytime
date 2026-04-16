@@ -91,3 +91,11 @@ export function useTriggerClustering() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['persons'] }),
   })
 }
+
+export function useExtractDates() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: () => apiFetch<IndexJob>('/index/extract-dates', { method: 'POST' }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['jobs'] }),
+  })
+}

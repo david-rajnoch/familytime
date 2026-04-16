@@ -18,6 +18,7 @@ from services.file_scanner import scan_directory, PHOTO_EXTS, VIDEO_EXTS
 from services.photo_processor import process_photo_path
 from services.video_processor import process_video_path
 from services.clustering_engine import run_full_clustering
+from services.video_date_extractor import extract_date_from_video
 
 router = APIRouter(prefix="/api/index")
 
@@ -275,6 +276,65 @@ def delete_folders(body: dict):
     conn.commit()
     conn.close()
     return {"ok": True, "deleted_files": total_files, "deleted_faces": total_faces}
+
+
+@router.post("/extract-dates", response_model=JobStatus)
+def extract_dates(background_tasks: BackgroundTasks):
+    """OCR camcorder OSD dates for all videos with taken_at IS NULL."""
+    conn = get_conn()
+    cur = conn.execute(
+        "INSERT INTO indexing_jobs (started_at, root_path, status) VALUES (?, 'Date extraction', 'running')",
+        (datetime.utcnow().isoformat(),),
+    )
+    job_id = cur.lastrowid
+    conn.commit()
+    row = conn.execute("SELECT * FROM indexing_jobs WHERE id = ?", (job_id,)).fetchone()
+    conn.close()
+    background_tasks.add_task(_run_date_extraction_job, job_id)
+    return _job_row_to_out(row)
+
+
+def _run_date_extraction_job(job_id: int):
+    cancel = _cancel_flags.setdefault(job_id, threading.Event())
+    conn = get_conn()
+    try:
+        rows = conn.execute(
+            "SELECT id, path FROM files WHERE file_type = 'video' AND taken_at IS NULL"
+        ).fetchall()
+        total = len(rows)
+        conn.execute("UPDATE indexing_jobs SET files_total = ? WHERE id = ?", (total, job_id))
+        conn.commit()
+
+        done = dates_found = 0
+        for row in rows:
+            if cancel.is_set():
+                _mark_cancelled(conn, job_id)
+                return
+            iso = extract_date_from_video(row["path"])
+            if iso:
+                conn.execute("UPDATE files SET taken_at = ? WHERE id = ?", (iso, row["id"]))
+                dates_found += 1
+            done += 1
+            conn.execute(
+                "UPDATE indexing_jobs SET files_done = ?, faces_found = ? WHERE id = ?",
+                (done, dates_found, job_id),
+            )
+            conn.commit()
+
+        conn.execute(
+            "UPDATE indexing_jobs SET status = 'done', finished_at = ? WHERE id = ?",
+            (datetime.utcnow().isoformat(), job_id),
+        )
+        conn.commit()
+    except Exception as e:
+        conn.execute(
+            "UPDATE indexing_jobs SET status = 'error', error_msg = ?, finished_at = ? WHERE id = ?",
+            (str(e), datetime.utcnow().isoformat(), job_id),
+        )
+        conn.commit()
+    finally:
+        _cancel_flags.pop(job_id, None)
+        conn.close()
 
 
 @router.post("/cluster")

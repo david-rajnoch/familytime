@@ -11,3 +11,4 @@ onnxruntime>=1.17
 umap-learn>=0.5
 hdbscan>=0.8
 scikit-learn>=1.4
+pyobjc-framework-Vision>=10.0
