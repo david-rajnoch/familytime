@@ -82,7 +82,7 @@ def get_timeline(
            FROM faces fa JOIN files fi ON fi.id = fa.file_id
            WHERE fa.cluster_id = ?
            GROUP BY label
-           ORDER BY first_date {direction}
+           ORDER BY COALESCE(first_date, CASE WHEN '{direction}' = 'DESC' THEN '9999-99-99' ELSE '0000-00-00' END) {direction}
            LIMIT ? OFFSET ?""",
         (person_id, limit, offset),
     ).fetchall()

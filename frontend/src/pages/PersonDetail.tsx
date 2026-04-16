@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { usePerson, useTimeline, useSampleFaces, useSetName, useRemoveFace, type Appearance, type TimelineGroup } from '../api/persons'
+import { usePerson, useTimeline, useSampleFaces, useSetName, type Appearance, type TimelineGroup } from '../api/persons'
 import { FaceThumbnail } from '../components/FaceThumbnail'
 import { useUIStore } from '../store/ui'
 import { apiFetch } from '../api/client'
@@ -12,7 +12,7 @@ function formatDate(iso: string | null): string {
   catch { return iso }
 }
 
-function ThumbItem({ appearance, playlist, labels, onDelete }: { appearance: Appearance; playlist: Appearance[]; labels: string[]; onDelete?: () => void }) {
+function ThumbItem({ appearance, playlist, labels }: { appearance: Appearance; playlist: Appearance[]; labels: string[] }) {
   const openViewer = useUIStore((s) => s.openViewer)
   const [hovered, setHovered] = useState(false)
   const isVideo = appearance.file_type === 'video'
@@ -82,27 +82,11 @@ function ThumbItem({ appearance, playlist, labels, onDelete }: { appearance: App
         </div>
       )}
 
-      {/* Delete button — top-right, visible on hover */}
-      {onDelete && hovered && (
-        <button
-          onClick={(e) => { e.stopPropagation(); onDelete() }}
-          title="Remove this face from person"
-          style={{
-            position: 'absolute', top: 5, right: 5,
-            width: 22, height: 22, borderRadius: '50%', border: 'none',
-            background: 'rgba(248,113,113,0.9)', color: '#fff',
-            fontSize: 13, lineHeight: '22px', textAlign: 'center',
-            cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}
-        >
-          ✕
-        </button>
-      )}
     </div>
   )
 }
 
-function TimelineSection({ group, playlist, labels, onDelete }: { group: TimelineGroup; playlist: Appearance[]; labels: string[]; onDelete: (faceId: number) => void }) {
+function TimelineSection({ group, playlist, labels }: { group: TimelineGroup; playlist: Appearance[]; labels: string[] }) {
   return (
     <div style={{ marginBottom: 32 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
@@ -117,18 +101,17 @@ function TimelineSection({ group, playlist, labels, onDelete }: { group: Timelin
       </div>
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         {group.appearances.map((a) => (
-          <ThumbItem key={a.face_id} appearance={a} playlist={playlist} labels={labels} onDelete={() => onDelete(a.face_id)} />
+          <ThumbItem key={a.face_id} appearance={a} playlist={playlist} labels={labels} />
         ))}
       </div>
     </div>
   )
 }
 
-function SampleFaceCell({ faceId, isCurrentThumb, isSetting, isPending, onSetThumb, onDelete }: {
+function SampleFaceCell({ faceId, isCurrentThumb, isSetting, isPending, onSetThumb }: {
   faceId: number; isCurrentThumb: boolean; isSetting: boolean; isPending: boolean
-  onSetThumb: () => void; onDelete: () => void
+  onSetThumb: () => void
 }) {
-  const [hovered, setHovered] = useState(false)
   return (
     <div
       title={isCurrentThumb ? 'Current profile picture' : 'Set as profile picture'}
@@ -141,11 +124,9 @@ function SampleFaceCell({ faceId, isCurrentThumb, isSetting, isPending, onSetThu
         opacity: isSetting ? 0.6 : 1,
       }}
       onMouseEnter={(e) => {
-        setHovered(true)
         if (!isCurrentThumb && !isPending) (e.currentTarget as HTMLElement).style.outline = '2px solid rgba(124,106,247,0.5)'
       }}
       onMouseLeave={(e) => {
-        setHovered(false)
         if (!isCurrentThumb) (e.currentTarget as HTMLElement).style.outline = '2px solid transparent'
       }}
     >
@@ -155,18 +136,6 @@ function SampleFaceCell({ faceId, isCurrentThumb, isSetting, isPending, onSetThu
       )}
       {isSetting && (
         <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.4)', fontSize: 12, color: '#fff' }}>…</div>
-      )}
-      {hovered && !isSetting && (
-        <button
-          onClick={(e) => { e.stopPropagation(); onDelete() }}
-          title="Remove this face"
-          style={{
-            position: 'absolute', top: 2, right: 2, width: 16, height: 16, borderRadius: '50%',
-            border: 'none', background: 'rgba(248,113,113,0.9)', color: '#fff',
-            fontSize: 10, cursor: 'pointer', padding: 0,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}
-        >✕</button>
       )}
     </div>
   )
@@ -192,19 +161,7 @@ export function PersonDetail() {
   } = useTimeline(personId ?? 0, order)
   const { data: sampleFaces } = useSampleFaces(personId ?? 0)
   const setName = useSetName(personId ?? 0)
-  const removeFace = useRemoveFace()
   const qc = useQueryClient()
-
-  const handleRemoveFace = (faceId: number) => {
-    if (!personId) return
-    removeFace.mutate({ personId, faceId }, {
-      onSuccess: () => {
-        qc.invalidateQueries({ queryKey: ['timeline', personId] })
-        qc.invalidateQueries({ queryKey: ['sample-faces', personId] })
-        qc.invalidateQueries({ queryKey: ['person', personId] })
-      },
-    })
-  }
 
   const setThumbnail = useMutation({
     mutationFn: ({ pid, fid }: { pid: number; fid: number }) =>
@@ -323,7 +280,6 @@ export function PersonDetail() {
                     isSetting={isSetting}
                     isPending={setThumbnail.isPending}
                     onSetThumb={() => setThumbnail.mutate({ pid: personId, fid: f.face_id })}
-                    onDelete={() => handleRemoveFace(f.face_id)}
                   />
                 )
               })}
@@ -386,7 +342,7 @@ export function PersonDetail() {
           </div>
         ) : (
           <>
-            {timeline.map((group) => <TimelineSection key={group.label} group={group} playlist={allAppearances} labels={allLabels} onDelete={handleRemoveFace} />)}
+            {timeline.map((group) => <TimelineSection key={group.label} group={group} playlist={allAppearances} labels={allLabels} />)}
 
             {isFetchingNextPage && (
               <div style={{ color: '#555', textAlign: 'center', padding: '16px' }}>Loading more…</div>
