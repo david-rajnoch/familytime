@@ -46,6 +46,9 @@ def scan_directory(root: str, conn: sqlite3.Connection) -> Iterator[tuple[str, s
     root_path = Path(root)
     for dirpath, _dirs, filenames in os.walk(root_path):
         folder_name = Path(dirpath).name
+        # VIDEO_TS is a DVD structure folder — use the parent tape folder name instead
+        if folder_name.upper() == "VIDEO_TS":
+            folder_name = Path(dirpath).parent.name
         label = clean_folder_label(folder_name)
         vol = drive_label(dirpath)
 
