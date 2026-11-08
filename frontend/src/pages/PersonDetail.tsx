@@ -14,7 +14,6 @@ function formatDate(iso: string | null): string {
 
 function ThumbItem({ appearance, playlist, labels }: { appearance: Appearance; playlist: Appearance[]; labels: string[] }) {
   const openViewer = useUIStore((s) => s.openViewer)
-  const [hovered, setHovered] = useState(false)
   const isVideo = appearance.file_type === 'video'
   const ts = appearance.source_timestamp_ms
 
@@ -37,12 +36,10 @@ function ThumbItem({ appearance, playlist, labels }: { appearance: Appearance; p
         border: '2px solid transparent', flexShrink: 0, transition: 'border .12s, transform .12s',
       }}
       onMouseEnter={(e) => {
-        setHovered(true)
         ;(e.currentTarget as HTMLElement).style.borderColor = '#7c6af7'
         ;(e.currentTarget as HTMLElement).style.transform = 'scale(1.02)'
       }}
       onMouseLeave={(e) => {
-        setHovered(false)
         ;(e.currentTarget as HTMLElement).style.borderColor = 'transparent'
         ;(e.currentTarget as HTMLElement).style.transform = 'scale(1)'
       }}
@@ -97,7 +94,11 @@ function TimelineSection({ group, playlist, labels }: { group: TimelineGroup; pl
           {group.date ? formatDate(group.date) : ''}
         </span>
         <div style={{ flex: 1, height: 1, background: '#2e2e36' }} />
-        <span style={{ fontSize: 12, color: '#555' }}>{group.appearances.length}</span>
+        <span style={{ fontSize: 12, color: '#555' }}>
+          {group.total_count > group.appearances.length
+            ? `${group.appearances.length} of ${group.total_count.toLocaleString()}`
+            : group.appearances.length}
+        </span>
       </div>
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         {group.appearances.map((a) => (

@@ -30,6 +30,7 @@ export interface TimelineGroup {
   label: string
   date: string | null
   appearances: Appearance[]
+  total_count: number
 }
 
 const PERSONS_PAGE_SIZE = 60

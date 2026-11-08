@@ -31,6 +31,7 @@ class TimelineGroup(BaseModel):
     label: str          # folder_label or "YYYY-MM"
     date: Optional[str] # earliest date in group
     appearances: list[AppearanceOut]
+    total_count: int = 0  # total faces in group (may exceed len(appearances))
 
 
 class JobStatus(BaseModel):

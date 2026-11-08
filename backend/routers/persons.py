@@ -91,10 +91,32 @@ def get_timeline(
         conn.close()
         return []
 
-    # Step 2: for each group fetch all its appearances in one query
+    # Step 2: for each group fetch appearances (capped) + total counts
+    MAX_PER_GROUP = 200
     labels = [r["label"] for r in group_rows]
     label_date = {r["label"]: r["first_date"] for r in group_rows}
     placeholders = ",".join("?" * len(labels))
+
+    # Total count per group (needed to show "200 of N")
+    count_rows = conn.execute(
+        f"""SELECT
+               COALESCE(fi.folder_label,
+                        CASE WHEN fi.taken_at IS NOT NULL
+                             THEN substr(fi.taken_at, 1, 7)
+                             ELSE 'Unknown Date' END
+               ) as group_label,
+               COUNT(*) as n
+            FROM faces fa JOIN files fi ON fi.id = fa.file_id
+            WHERE fa.cluster_id = ?
+              AND COALESCE(fi.folder_label,
+                           CASE WHEN fi.taken_at IS NOT NULL
+                                THEN substr(fi.taken_at, 1, 7)
+                                ELSE 'Unknown Date' END
+                  ) IN ({placeholders})
+            GROUP BY group_label""",
+        [person_id] + labels,
+    ).fetchall()
+    label_count = {r["group_label"]: r["n"] for r in count_rows}
 
     rows = conn.execute(
         f"""SELECT fa.id as face_id, fa.file_id, fa.source_timestamp_ms,
@@ -117,15 +139,20 @@ def get_timeline(
     ).fetchall()
     conn.close()
 
-    # Bucket appearances into their groups, preserving group order
+    # Bucket appearances into their groups, capped at MAX_PER_GROUP
     groups: dict[str, list] = {lbl: [] for lbl in labels}
     for row in rows:
         lbl = row["group_label"]
-        if lbl in groups:
+        if lbl in groups and len(groups[lbl]) < MAX_PER_GROUP:
             groups[lbl].append(_appearance_out(row))
 
     return [
-        TimelineGroup(label=lbl, date=label_date[lbl], appearances=groups[lbl])
+        TimelineGroup(
+            label=lbl,
+            date=label_date[lbl],
+            appearances=groups[lbl],
+            total_count=label_count.get(lbl, len(groups[lbl])),
+        )
         for lbl in labels
         if groups[lbl]
     ]
